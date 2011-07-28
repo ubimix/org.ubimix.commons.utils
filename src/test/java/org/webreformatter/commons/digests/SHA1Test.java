@@ -87,6 +87,14 @@ public class SHA1Test extends TestCase {
         String test = fSha.getDigestString();
         // System.out.println(control + " - " + test);
         assertEquals(control, test);
+
+        Sha1Digest.Builder builder = Sha1Digest.builder();
+        for (String string : strings) {
+            builder.update(string);
+        }
+        Sha1Digest digest = builder.build();
+        assertEquals(control, digest.toString());
+
         return test;
     }
 

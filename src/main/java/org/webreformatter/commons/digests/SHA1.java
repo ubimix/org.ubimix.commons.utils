@@ -56,7 +56,7 @@ public class SHA1 {
      * 
      * @author kotelnikov
      */
-    public class StringByteProvider implements IByteProvider {
+    public static class StringByteProvider implements IByteProvider {
 
         private int[] fBuf = { 0, 0, 0 };
 
@@ -105,7 +105,7 @@ public class SHA1 {
 
     }
 
-    private static int addToArray(int[] array, int pos, int val) {
+    protected static int addToArray(int[] array, int pos, int val) {
         int i = 32;
         array[pos++] = (val >>> (i -= 8)) & 0xFF;
         array[pos++] = (val >>> (i -= 8)) & 0xFF;
@@ -114,7 +114,7 @@ public class SHA1 {
         return pos;
     }
 
-    private static void appendByteToBuf(StringBuilder buf, int val) {
+    protected static void appendByteToBuf(StringBuilder buf, int val) {
         String str = Integer.toHexString(val & 0xFF);
         if (str.length() < 2) {
             buf.append('0');
@@ -128,6 +128,27 @@ public class SHA1 {
         appendByteToBuf(buf, val >>> (i -= 8));
         appendByteToBuf(buf, val >>> (i -= 8));
         appendByteToBuf(buf, val >>> (i -= 8));
+    }
+
+    public static int[] getDigestAsByteArray(int[] digest) {
+        int pos = 0;
+        int[] array = new int[20];
+        pos = addToArray(array, pos, digest[0]);
+        pos = addToArray(array, pos, digest[1]);
+        pos = addToArray(array, pos, digest[2]);
+        pos = addToArray(array, pos, digest[3]);
+        pos = addToArray(array, pos, digest[4]);
+        return array;
+    }
+
+    public static String getDigestAsString(int[] digest) {
+        StringBuilder buf = new StringBuilder();
+        appendIntToBuf(buf, digest[0]);
+        appendIntToBuf(buf, digest[1]);
+        appendIntToBuf(buf, digest[2]);
+        appendIntToBuf(buf, digest[3]);
+        appendIntToBuf(buf, digest[4]);
+        return buf.toString();
     }
 
     private static int rotateLeft(int n, int s) {
@@ -162,6 +183,15 @@ public class SHA1 {
     public SHA1() {
         super();
         reset();
+    }
+
+    public SHA1(SHA1 digest) {
+        this();
+        System.arraycopy(digest.fBuf, 0, fBuf, 0, fBuf.length);
+        fBufPos = digest.fBufPos;
+        System.arraycopy(digest.fDigest, 0, fDigest, 0, fDigest.length);
+        fLength = digest.fLength;
+        fValue = digest.fValue;
     }
 
     /**
@@ -242,7 +272,7 @@ public class SHA1 {
     /**
      * 
      */
-    private void finish() {
+    protected void finish() {
         int shift = fLength % 4;
         fValue |= (0x080000000 >>> (shift * 8));
         addToBuf(fValue);
@@ -258,27 +288,20 @@ public class SHA1 {
      */
     public int[] getDigest() {
         finish();
-        int pos = 0;
-        int[] array = new int[20];
-        pos = addToArray(array, pos, fDigest[0]);
-        pos = addToArray(array, pos, fDigest[1]);
-        pos = addToArray(array, pos, fDigest[2]);
-        pos = addToArray(array, pos, fDigest[3]);
-        pos = addToArray(array, pos, fDigest[4]);
+        int[] array = getDigestAsByteArray(fDigest);
         reset();
         return array;
     }
 
     public String getDigestString() {
         finish();
-        StringBuilder buf = new StringBuilder();
-        appendIntToBuf(buf, fDigest[0]);
-        appendIntToBuf(buf, fDigest[1]);
-        appendIntToBuf(buf, fDigest[2]);
-        appendIntToBuf(buf, fDigest[3]);
-        appendIntToBuf(buf, fDigest[4]);
+        String result = getDigestAsString(fDigest);
         reset();
-        return buf.toString();
+        return result;
+    }
+
+    protected int[] getInternalDigest() {
+        return fDigest;
     }
 
     private void reset() {
@@ -294,7 +317,12 @@ public class SHA1 {
         fValue = 0;
     }
 
-    public void update(IByteProvider iterator) {
+    @Override
+    public String toString() {
+        return getDigestAsString(fDigest);
+    }
+
+    public SHA1 update(IByteProvider iterator) {
         while (true) {
             int x = iterator.getNext();
             if (x < 0) {
@@ -302,15 +330,18 @@ public class SHA1 {
             }
             doUpdate(x);
         }
+        return this;
     }
 
-    public void update(int value) {
+    public SHA1 update(int value) {
         value = value & 0xFF;
         doUpdate(value);
+        return this;
     }
 
-    public void update(String msg) {
+    public SHA1 update(String msg) {
         update(new StringByteProvider(msg));
+        return this;
     }
 
 }
