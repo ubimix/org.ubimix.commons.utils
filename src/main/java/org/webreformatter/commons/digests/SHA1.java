@@ -31,6 +31,69 @@ package org.webreformatter.commons.digests;
 public class SHA1 {
 
     /**
+     * This is a byte provider translating a given string to the corresponding
+     * sequence of bytes. This class represents the string using UTF-8 encoding.
+     * So each character of the string will be translated from one to three
+     * bytes depending on character.
+     * 
+     * @author kotelnikov
+     */
+    public static abstract class AbstractStringByteProvider  implements IByteProvider {
+
+        private int[] fBuf = { 0, 0, 0 };
+
+        private int fBufLen = 0;
+
+        private int fBufPos = 0;
+
+
+        public AbstractStringByteProvider () {
+        }
+
+        /**
+         * @see org.webreformatter.commons.digests.SHA1.IByteProvider#getNext()
+         */
+        public int getNext() {
+            if (fBufPos == fBufLen) {
+                int c = readNext();
+                if (c < 0) {
+                    return -1;
+                }
+                fBufPos = 0;
+                if (c < 128) {
+                    fBufLen = 1;
+                    fBuf[0] = c;
+                    fBuf[1] = 0;
+                    fBuf[2] = 0;
+                } else if ((c > 127) && (c < 2048)) {
+                    fBufLen = 2;
+                    fBuf[0] = (c >>> 6) | 192;
+                    fBuf[1] = (c & 63) | 128;
+                    fBuf[2] = 0;
+                } else {
+                    fBufLen = 3;
+                    fBuf[0] = (c >>> 12) | 224;
+                    fBuf[1] = ((c >>> 6) & 63) | 128;
+                    fBuf[2] = (c & 63) | 128;
+                }
+            }
+            int result = fBuf[fBufPos++] & 0xFF;
+            return result;
+        }
+
+        /**
+         * Reads and returns a next character; if there is no more characters
+         * to read then this method should return -1.
+         * 
+         * @return the code of the next character in the character stream or -1
+         *         if there is no more data to read 
+         */
+        protected abstract int readNext();
+
+    }
+    
+
+    /**
      * Instances of this class are used to get bytes for which the hash should
      * be calculated
      * 
@@ -56,50 +119,22 @@ public class SHA1 {
      * 
      * @author kotelnikov
      */
-    public static class StringByteProvider implements IByteProvider {
-
-        private int[] fBuf = { 0, 0, 0 };
-
-        private int fBufLen = 0;
-
-        private int fBufPos = 0;
+    public static class StringByteProvider extends AbstractStringByteProvider  {
 
         private String fMessage;
 
         private int fPos;
 
-        public StringByteProvider(String msg) {
+        public StringByteProvider (String msg) {
             fMessage = msg;
         }
 
-        /**
-         * @see org.webreformatter.rdf.org.webreformatter.rdf.ns.SHA1.IByteProvider#getNext()
-         */
-        public int getNext() {
-            if (fBufPos == fBufLen) {
-                if (fPos == fMessage.length()) {
-                    return -1;
-                }
-                char c = fMessage.charAt(fPos++);
-                fBufPos = 0;
-                if (c < 128) {
-                    fBufLen = 1;
-                    fBuf[0] = c;
-                    fBuf[1] = 0;
-                    fBuf[2] = 0;
-                } else if ((c > 127) && (c < 2048)) {
-                    fBufLen = 2;
-                    fBuf[0] = (c >>> 6) | 192;
-                    fBuf[1] = (c & 63) | 128;
-                    fBuf[2] = 0;
-                } else {
-                    fBufLen = 3;
-                    fBuf[0] = (c >>> 12) | 224;
-                    fBuf[1] = ((c >>> 6) & 63) | 128;
-                    fBuf[2] = (c & 63) | 128;
-                }
+        @Override
+        protected int readNext() {
+            if (fPos >= fMessage.length()) {
+                return -1;
             }
-            int result = fBuf[fBufPos++] & 0xFF;
+            int result = fMessage.charAt(fPos++);
             return result;
         }
 
