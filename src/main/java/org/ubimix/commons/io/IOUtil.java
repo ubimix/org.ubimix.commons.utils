@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  * ************************************************************************** */
-package org.webreformatter.commons.io;
+package org.ubimix.commons.io;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

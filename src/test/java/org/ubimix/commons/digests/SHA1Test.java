@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.webreformatter.commons.digests;
+package org.ubimix.commons.digests;
 
 import java.security.MessageDigest;
 import java.util.Random;

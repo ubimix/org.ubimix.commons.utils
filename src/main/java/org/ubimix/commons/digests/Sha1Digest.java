@@ -14,9 +14,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  * ************************************************************************** */
-package org.webreformatter.commons.digests;
+package org.ubimix.commons.digests;
 
-import org.webreformatter.commons.digests.SHA1.IByteProvider;
+import org.ubimix.commons.digests.SHA1.IByteProvider;
 
 /**
  * This class is used to calculate SHA1 digests of binary data. This class can

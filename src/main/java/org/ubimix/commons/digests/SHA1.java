@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  * ************************************************************************** */
-package org.webreformatter.commons.digests;
+package org.ubimix.commons.digests;
 
 /**
  * This class is used to calculate SHA1 digests of binary data. This class can
@@ -51,7 +51,7 @@ public class SHA1 {
         }
 
         /**
-         * @see org.webreformatter.commons.digests.SHA1.IByteProvider#getNext()
+         * @see org.ubimix.commons.digests.SHA1.IByteProvider#getNext()
          */
         public int getNext() {
             if (fBufPos == fBufLen) {
